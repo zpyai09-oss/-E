@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>المجتمع | Community - منصة E</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--bg:#08111a;--card:#0b222a;--accent:orange;--muted:#bbb}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Segoe UI,Helvetica,sans-serif;direction:rtl;background:url('background.jpg') center/cover no-repeat;color:#fff}
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(0,0,0,0.55)}
+    header img{width:48px;border-radius:6px}
+    .brand{text-align:right}
+    .container{max-width:900px;margin:16px auto;padding:14px}
+    .composer{background:rgba(255,255,255,0.03);padding:12px;border-radius:10px}
+    input[type=text], input[type=file], textarea{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff}
+    button{padding:10px 12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-weight:bold;cursor:pointer;margin-top:8px}
+    .row{display:flex;gap:8px;align-items:center}
+    .search{margin:12px 0}
+    .posts{margin-top:16px}
+    .post{background:var(--card);padding:12px;border-radius:10px;margin-bottom:12px}
+    .post .meta{display:flex;justify-content:space-between;align-items:center}
+    .post img.preview{max-width:100%;border-radius:8px;margin-top:10px}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .like{background:rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .comment-area{margin-top:10px;display:flex;gap:8px}
+    .comments{margin-top:10px;background:rgba(0,0,0,0.25);padding:8px;border-radius:8px}
+    .comment{padding:6px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:6px}
+    .small{font-size:13px;color:var(--muted)}
+    .no-posts{color:var(--muted);padding:12px;text-align:center}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div style="font-weight:bold">المجتمع | Community</div>
+      <div class="small">انشر صورة أو فكرة؛ يمكن للجميع التعليق والإعجاب</div>
+    </div>
+    <img src="logo.jpg" alt="logo">
+  </header>
+
+  <div class="container">
+
+    <div class="composer">
+      <input id="username" type="text" placeholder="اسمك (مثلاً: Ahmed)">
+      <textarea id="text" rows="3" placeholder="اكتب فكرتك أو وصف الصورة هنا..."></textarea>
+      <input id="file" type="file" accept="image/*">
+      <div class="row">
+        <button onclick="publish(true)">نشر واذهب إلى المجتمع | Publish</button>
+        <button onclick="publish(false)">نشر محلياً | Save Local</button>
+        <div style="flex:1"></div>
+        <input id="search" type="text" placeholder="🔍 ابحث باسم أو نص..." oninput="applySearch()">
+      </div>
+      <div id="previewContainer" style="margin-top:10px"></div>
+    </div>
+
+    <div id="posts" class="posts"></div>
+
+  </div>
+
+  <script>
+    // تحميل المنشورات من localStorage
+    let posts = JSON.parse(localStorage.getItem('e_posts_v1') || '[]');
+
+    // قراءة ملف الصورة وتحويله ل dataURL للعرض والتخزين محلياً
+    const fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files[0];
+      const pc = document.getElementById('previewContainer');
+      pc.innerHTML = '';
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'preview';
+        pc.appendChild(img);
+      };
+      reader.readAsDataURL(f);
+    });
+
+    function savePosts(){ localStorage.setItem('e_posts_v1', JSON.stringify(posts)); }
+
+    function publish(goToCommunity){
+      const user = document.getElementById('username').value.trim() || 'مجهول';
+      const text = document.getElementById('text').value.trim();
+      const file = document.getElementById('file').files[0];
+
+      if (!text && !file) { alert('أدخل نصًا أو اختر صورة للنشر'); return; }
+
+      if (file){
+        const reader = new FileReader();
+        reader.onload = e => {
+          createPost(user, text, e.target.result);
+          afterPublish(goToCommunity);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        createPost(user, text, null);
+        afterPublish(goToCommunity);
+      }
+    }
+
+    function createPost(user, text, imgData){
+      const post = {
+        id: Date.now(),
+        user, text,
+        img: imgData,
+        likes: 0,
+        comments: [],
+        time: new Date().toISOString()
+      };
+      posts.unshift(post);
+      savePosts();
+      renderPosts(posts);
+      clearComposer();
+    }
+
+    function afterPublish(go){
+      if (go) {
+        alert('تم النشر. المنشور ظاهر في أسفل الصفحة.'); 
+        // هنا يبقى المستخدم في نفس الصفحة لأن هذه هي صفحة المجتمع
+      } else {
+        alert('تم الحفظ محلياً');
+      }
+    }
+
+    function clearComposer(){
+      document.getElementById('text').value='';
+      document.getElementById('file').value='';
+      document.getElementById('previewContainer').innerHTML='';
+    }
+
+    function renderPosts(list){
+      const container = document.getElementById('posts');
+      container.innerHTML = '';
+      if (!list.length) { container.innerHTML = '<div class="no-posts">لا توجد منشورات بعد</div>'; return; }
+      list.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          <div class="meta">
+            <div>
+              <strong>${escapeHtml(p.user)}</strong>
+              <div class="small">${new Date(p.time).toLocaleString()}</div>
+            </div>
+            <div class="small">${p.likes} 👍</div>
+          </div>
+          <div style="margin-top:8px">${escapeHtml(p.text)}</div>
+          ${p.img ? <img src="${p.img}" class="preview"> : ''}
+          <div class="actions">
+            <button class="like" onclick="toggleLike(${p.id})">إعجاب | Like</button>
+            <button onclick="focusComment(${p.id})">علق | Comment</button>
+          </div>
+          <div class="comment-area" id="commentArea_${p.id}" style="display:none">
+            <input id="commentInput_${p.id}" placeholder="اكتب تعليق...">
+            <button onclick="addComment(${p.id})">أرسل</button>
+          </div>
+          <div class="comments" id="comments_${p.id}">
+            ${renderComments(p.comments)}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderComments(comments){
+      if (!comments || !comments.length) return '<div class="small">لا تعليقات بعد</div>';
+      return comments.map(c => <div class="comment"><strong>${escapeHtml(c.user)}</strong> — ${escapeHtml(c.text)}</div>).join('');
+    }
+
+    function toggleLike(id){
+      const i = posts.findIndex(x => x.id === id);
+      if (i === -1) return;
+      posts[i].likes = (posts[i].likes || 0) + 1;
+      savePosts(); renderPosts(posts);
+    }
+
+    function focusComment(id){
+      const el = document.getElementById('commentArea_'+id);
+      if (!el) return;
+      el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function addComment(id){
+      const inp = document.getElementById('commentInput_'+id);
+      if (!inp) return;
+      const text = inp.value.trim();
+      if (!text) return;
+      const i = posts.findIndex(x => x.id === id);
+      if (i === -1) return;
+      posts[i].comments.push({ user: (document.getElementById('username').value.trim() || 'مجهول'), text, time: new Date().toISOString() });
+      savePosts(); renderPosts(posts);
+    }
+
+    function applySearch(){
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      if (!q) { renderPosts(posts); return; }
+      const filtered = posts.filter(p => p.user.toLowerCase().includes(q) || (p.text || '').toLowerCase().includes(q));
+      renderPosts(filtered);
+    }
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+    // initial
+    renderPosts(posts);
+  </script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>

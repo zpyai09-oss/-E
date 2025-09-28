@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول | Login - منصة E</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      direction: rtl;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+    header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px 20px;
+    }
+    header img {
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+    }
+    h1 { font-size: 24px; margin-top: 10px; color: orange; }
+    .container {
+      margin: 30px auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 350px;
+    }
+    input { padding: 10px; margin: 10px 0; width: 100%; border-radius: 5px; border: none; }
+    button {
+      padding: 10px; background-color: orange; border: none; border-radius: 5px;
+      color: white; font-weight: bold; width: 100%; cursor: pointer;
+    }
+    .links { margin-top: 10px; font-size: 14px; cursor: pointer; color: orange; }
+    .hidden { display: none; }
+    .message { margin-top: 15px; font-size: 14px; color: lightgreen; word-break:break-word; }
+    .error { color: #ff8a80; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="logo.jpg" alt="شعار المنصة">
+  </header>
+
+  <h1>🌟 مرحبًا بك في منصة E</h1>
+
+  <div class="container">
+    <!-- نموذج تسجيل الدخول -->
+    <div id="login-form">
+      <input id="login-identifier" type="text" placeholder="البريد الإلكتروني أو رقم الهاتف">
+      <input id="login-password" type="password" placeholder="كلمة المرور">
+      <button id="login-btn">دخول</button>
+      <div class="links" id="forgot-link">نسيت كلمة المرور؟</div>
+      <div class="links" id="register-link">إنشاء حساب جديد</div>
+      <div id="login-message" class="message"></div>
+    </div>
+
+    <!-- نموذج إنشاء حساب -->
+    <div id="register-form" class="hidden">
+      <input id="reg-email" type="email" placeholder="البريد الإلكتروني">
+      <input id="pass1" type="password" placeholder="كلمة المرور">
+      <input id="pass2" type="password" placeholder="تأكيد كلمة المرور">
+      <button id="register-btn">تسجيل</button>
+      <div id="register-message" class="message"></div>
+      <div class="links" id="back-to-login-1">عودة لتسجيل الدخول</div>
+    </div>
+
+    <!-- نموذج نسيان كلمة المرور -->
+    <div id="forgot-form" class="hidden">
+      <input id="forgot-email" type="email" placeholder="أدخل بريدك الإلكتروني">
+      <button id="forgot-btn">إرسال رمز التحقق</button>
+      <div id="forgot-message" class="message"></div>
+      <div class="links" id="back-to-login-2">عودة لتسجيل الدخول</div>
+    </div>
+
+    <!-- القوائم بعد الدخول -->
+    <div id="menu" class="hidden">
+      <h2 style="color: lightgreen;">📚 القوائم الرئيسية</h2>
+      <button onclick="window.location.href='index.html'">🏠 الرئيسية | Home</button><br><br>
+      <button onclick="window.location.href='grammar.html'">📘 القواعد | Grammar</button><br><br>
+      <button onclick="window.location.href='basics.html'">🧠 الأساسيات | Basics</button><br><br>
+      <button onclick="window.location.href='community.html'">👥 المجتمع | Community</button>
+      <div style="margin-top:12px">
+        <button id="signout-btn" style="background:#ff6b6b">خروج</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- هنا نضع كود Firebase بنمط module كما أعطاك الموقع -->
+  <script type="module">
+    // استيراد ما نحتاجه من مكتبات Firebase (نسخة رسمية حديثة)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getStorage } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+
+    // تكوين مشروع Firebase (انسخته من حسابك)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlH5QLPBbqMqr4WOhQY7XtSH-3KIzV8-o",
+      authDomain: "e-platform-20de2.firebaseapp.com",
+      projectId: "e-platform-20de2",
+      storageBucket: "e-platform-20de2.firebasestorage.app",
+      messagingSenderId: "852282304347",
+      appId: "1:852282304347:web:8a90926fbf8eeef1551c7e",
+      measurementId: "G-MGH8K3W6HG"
+    };
+
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // عناصر DOM
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const forgotForm = document.getElementById('forgot-form');
+    const menu = document.getElementById('menu');
+
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const forgotBtn = document.getElementById('forgot-btn');
+    const signoutBtn = document.getElementById('signout-btn');
+
+    const loginMsg = document.getElementById('login-message');
+    const regMsg = document.getElementById('register-message');
+    const forgotMsg = document.getElementById('forgot-message');
+
+    // توجيه واجهة
+    document.getElementById('register-link').addEventListener('click', () => show('register'));
+    document.getElementById('forgot-link').addEventListener('click', () => show('forgot'));
+    document.getElementById('back-to-login-1').addEventListener('click', () => show('login'));
+    document.getElementById('back-to-login-2').addEventListener('click', () => show('login'));
+
+    function show(name) {
+      loginForm.classList.add('hidden');
+      registerForm.classList.add('hidden');
+      forgotForm.classList.add('hidden');
+      menu.classList.add('hidden');
+      if (name === 'login') loginForm.classList.remove('hidden');
+      if (name === 'register') registerForm.classList.remove('hidden');
+      if (name === 'forgot') forgotForm.classList.remove('hidden');
+      if (name === 'menu') menu.classList.remove('hidden');
+      clearMessages();
+    }
+
+    function clearMessages() {
+      loginMsg.textContent = '';
+      regMsg.textContent = '';
+      forgotMsg.textContent = '';
+    }
+
+    // تسجيل مستخدم جديد (email/password)
+    registerBtn.addEventListener('click', async () => {
+      const email = document.getElementById('reg-email').value.trim();
+      const p1 = document.getElementById('pass1').value;
+      const p2 = document.getElementById('pass2').value;
+      if (!email || !p1 || p1 !== p2 || p1.length < 6) {
+        regMsg.textContent = '⚠️ تأكد من صحة البريد وتطابق كلمة المرور وأنها لا تقل عن 6 أحرف.';
+        regMsg.classList.add('error');
+        return;
+      }
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, p1);
+        regMsg.textContent = '✅ تم إنشاء الحساب بنجاح.';
+        regMsg.classList.remove('error');
+        // بعد التسجيل ننتقل تلقائياً للقائمة أو يمكنك إرسال تحقق بالبريد
+        setTimeout(() => { window.location.href = 'chat.html'; }, 800);
+      } catch (e) {
+        regMsg.textContent = '❌ ' + e.message;
+        regMsg.classList.add('error');
+      }
+    });
+
+    // تسجيل دخول (email/password)
+    loginBtn.addEventListener('click', async () => {
+      const id = document.getElementById('login-identifier').value.trim();
+      const pass = document.getElementById('login-password').value;
+      if (!id || !pass) { loginMsg.textContent = '⚠️ أدخل البريد/الرقم وكلمة المرور.'; loginMsg.classList.add('error'); return; }
+
+      // هنا نفترض أن المستخدم يدخل البريد. إذا أردت دعم رقم الهاتف، نحتاج تنفيذ Phone Auth منفصل.
+      try {
+        await signInWithEmailAndPassword(auth, id, pass);
+        loginMsg.textContent = '✅ تم الدخول';
+        loginMsg.classList.remove('error');
+        setTimeout(() => { window.location.href = 'chat.html'; }, 700);
+      } catch (e) {
+        loginMsg.textContent = '❌ ' + e.message;
+        loginMsg.classList.add('error');
+      }
+    });
+
+    // إرسال رابط/رمز إعادة تعيين كلمة المرور عبر البريد
+    forgotBtn.addEventListener('click', async () => {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) { forgotMsg.textContent = '⚠️ أدخل بريدك الإلكتروني.'; forgotMsg.classList.add('error'); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        forgotMsg.textContent = '📩 تم إرسال رسالة إعادة التعيين إلى بريدك الإلكتروني.';
+        forgotMsg.classList.remove('error');
+      } catch (e) {
+        forgotMsg.textContent = '❌ ' + e.message;
+        forgotMsg.classList.add('error');
+      }
+    });
+
+    // مراقبة حالة المصادقة
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        // مستخدم مسجل - إظهار القائمة أو إعادة التوجيه
+        // يمكنك اختيار إبقائه في الصفحة وإظهار القائمة:
+        // show('menu');
+        // أو التوجّه مباشرة إلى chat.html:
+        // window.location.href = 'chat.html';
+        console.log('مستخدم متصل:', user.email);
+      } else {
+        console.log('لا يوجد مستخدم متصل');
+      }
+    });
+
+    // تسجيل الخروج
+    signoutBtn && signoutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+      show('login');
+    });
+
+    // عند تحميل الصفحة نعرض شاشة تسجيل الدخول بشكل افتراضي
+    show('login');
+  </script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>

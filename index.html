@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>منصة E - الرئيسية | E Platform - Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial,Helvetica,sans-serif; direction:rtl;
+      background:url('background.jpg') center/cover no-repeat;
+      color:#fff;
+    }
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.55)}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo img{width:56px;height:auto;border-radius:6px}
+    .nav{display:flex;gap:10px;flex-wrap:wrap}
+    .nav a{color:orange;text-decoration:none;padding:8px 12px;background:rgba(255,165,0,0.08);border-radius:6px}
+    .hero{max-width:1000px;margin:28px auto;padding:20px;background:rgba(0,0,0,0.52);border-radius:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px}
+    .card{background:rgba(255,255,255,0.04);padding:16px;border-radius:10px;text-align:right}
+    .card h2{color:lightgreen;margin:0 0 8px}
+    .card p{color:#eee;line-height:1.6}
+    .btn{display:inline-block;padding:10px 14px;background:orange;color:#fff;border-radius:8px;text-decoration:none;margin-top:10px}
+    footer{text-align:center;padding:14px;color:#ddd;background:rgba(0,0,0,0.45);position:fixed;left:0;right:0;bottom:0}
+    .user-card{display:flex;align-items:center;gap:12px}
+    .user-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.08)}
+    .user-info{display:flex;flex-direction:column}
+    .user-name{font-weight:bold;color:lightgreen}
+    .user-email{font-size:13px;color:#ddd}
+    .profile-btn{padding:8px 10px;border-radius:8px;background:rgba(255,165,0,0.12);color:orange;border:1px solid rgba(255,165,0,0.06);cursor:pointer}
+    @media(max-width:520px){.topbar{padding:10px}.hero{margin:16px}}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="logo">
+      <img src="logo.jpg" alt="شعار المنصة">
+      <div>
+        <div style="font-weight:bold">منصة E</div>
+        <div style="font-size:12px;color:#ddd">E Platform</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="home.html">🏠 الرئيسية | Home</a>
+      <a href="grammar.html">📘 القواعد | Grammar</a>
+      <a href="basics.html">🧠 الأساسيات | Basics</a>
+      <a href="community.html">👥 المجتمع | Community</a>
+      <a href="chat.html">💬 المحادثات | Chat</a>
+      <a href="login.html">🔐 تسجيل الدخول | Login</a>
+    </nav>
+  </div>
+
+  <main class="hero">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+      <div class="user-card">
+        <img id="userPhoto" class="user-photo" src="default-user.png" alt="صورة المستخدم">
+        <div class="user-info">
+          <div id="userName" class="user-name">جارٍ التحميل...</div>
+          <div id="userEmail" class="user-email"></div>
+        </div>
+        <button id="openProfile" class="profile-btn">عرض الملف الشخصي</button>
+      </div>
+
+      <div style="max-width:560px">
+        <h1 style="margin:0;color:orange">🌟 مرحبًا بك في منصة E — Welcome to E Platform</h1>
+        <p style="margin-top:10px;color:#f0f0f0">
+          هذه الصفحة الرئيسية منظمة لترشدك إلى القواعد، الأساسيات، المجتمع، والنشر والمحادثات.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <div class="card">
+        <h2>📘 القواعد | Grammar</h2>
+        <p>شرح مفصل للقواعد الإنجليزية: الأزمنة، المبني للمعلوم والمجهول، الأسئلة، الصفات، الظروف...</p>
+        <a class="btn" href="grammar.html">اذهب إلى القواعد</a>
+      </div>
+
+      <div class="card">
+        <h2>🧠 الأساسيات | Basics</h2>
+        <p>قوائم كلمات مع جمل كاملة وترجمتها، ونطق مبسط وتمارين لتكوين جملة.</p>
+        <a class="btn" href="basics.html">اذهب إلى الأساسيات</a>
+      </div>
+
+      <div class="card">
+        <h2>👥 المجتمع | Community</h2>
+        <p>أنشر منشوراً، اقرأ منشورات الآخرين، ابحث، علّق وأعجب بما يعجبك.</p>
+        <a class="btn" href="community.html">اذهب إلى المجتمع</a>
+      </div>
+
+      <div class="card">
+        <h2>💬 محادثات | Chat</h2>
+        <p>تواصل مع مستخدمين آخرين، تبادل المعرفة وابدأ محادثات تعليمية.</p>
+        <a class="btn" href="chat.html">اذهب إلى المحادثات</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>© منصة E — E Platform</footer>
+
+  <!-- كود Firebase (module) - انسخ التهيئة التي أعطاك إياها موقع Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getStorage, ref as sRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlH5QLPBbqMqr4WOhQY7XtSH-3KIzV8-o",
+      authDomain: "e-platform-20de2.firebaseapp.com",
+      projectId: "e-platform-20de2",
+      storageBucket: "e-platform-20de2.firebasestorage.app",
+      messagingSenderId: "852282304347",
+      appId: "1:852282304347:web:8a90926fbf8eeef1551c7e",
+      measurementId: "G-MGH8K3W6HG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // DOM
+    const userPhotoEl = document.getElementById('userPhoto');
+    const userNameEl = document.getElementById('userName');
+    const userEmailEl = document.getElementById('userEmail');
+    const openProfileBtn = document.getElementById('openProfile');
+
+    // صورة افتراضية في حال عدم وجود صورة للمستخدم
+    const DEFAULT_PHOTO = 'default-user.png'; // ضع ملف صورة افتراضية في مجلد المشروع
+
+    // عند حالة المصادقة، نجلب بيانات المستخدم من Firestore (collection: users, doc: uid)
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        // إذا لم يكن المستخدم مسجل دخول يمكن إظهار رابط لتسجيل الدخول
+        userNameEl.textContent = 'زائر';
+        userEmailEl.textContent = '';
+        userPhotoEl.src = DEFAULT_PHOTO;
+        openProfileBtn.textContent = 'سجل الدخول';
+        openProfileBtn.onclick = () => window.location.href = 'login.html';
+        return;
+      }
+
+      userEmailEl.textContent = user.email || user.phoneNumber || '';
+      // جلب بيانات الملف من Firestore
+      try {
+        const uDoc = doc(db, 'users', user.uid);
+        const snap = await getDoc(uDoc);
+        if (snap.exists()) {
+          const data = snap.data();
+          userNameEl.textContent = data.displayName || user.email || 'مستخدم';
+          if (data.photoPath) {
+            // إذا خُزن المسار في Storage نعرض الصورة من Storage
+            try {
+              const url = await getDownloadURL(sRef(storage, data.photoPath));
+              userPhotoEl.src = url;
+            } catch {
+              userPhotoEl.src = data.photoURL || user.photoURL || DEFAULT_PHOTO;
+            }
+          } else {
+            userPhotoEl.src = data.photoURL || user.photoURL || DEFAULT_PHOTO;
+          }
+        } else {
+          // لم توجد بيانات في users: ننشئ مستند أساسي
+          await setDoc(uDoc, {
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            bio: ''
+          });
+          userNameEl.textContent = user.displayName || user.email || 'مستخدم';
+          userPhotoEl.src = user.photoURL || DEFAULT_PHOTO;
+        }
+      } catch (e) {
+        console.error('خطأ في جلب بيانات المستخدم:', e);
+        userNameEl.textContent = user.email || 'مستخدم';
+        userPhotoEl.src = user.photoURL || DEFAULT_PHOTO;
+      }
+
+      openProfileBtn.textContent = 'عرض الملف الشخصي';
+      openProfileBtn.onclick = () => {
+        // نمرر uid في رابط أو نفتح profile.html الذي سيقرأ المستخدم الحالي من Firebase
+        window.location.href = 'profile.html';
+      };
+    });
+  </script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>

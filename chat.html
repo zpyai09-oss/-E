@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>المحادثات والمنشورات | Chat - منصة E</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Segoe UI,Helvetica,sans-serif;direction:rtl;background:url('background.jpg') center/cover no-repeat;color:#fff}
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(0,0,0,0.55)}
+    header img{width:44px;border-radius:6px}
+    .container{max-width:900px;margin:12px auto;padding:12px}
+    .panel{background:rgba(0,0,0,0.35);border-radius:10px;padding:12px;margin-bottom:12px}
+    .posts{max-height:30vh;overflow:auto;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:10px}
+    .post{padding:8px;border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,0.04)}
+    .post .meta{font-size:13px;color:#ddd;display:flex;justify-content:space-between;gap:8px}
+    .post .text{margin-top:6px;color:#fff}
+    .chat-window{height:32vh;background:rgba(0,0,0,0.35);border-radius:10px;padding:12px;overflow:auto}
+    .msg{padding:8px;border-radius:8px;margin-bottom:8px;max-width:75%}
+    .me{background:orange;color:#000;margin-left:auto;text-align:right}
+    .other{background:rgba(255,255,255,0.06);text-align:left}
+    .composer{display:flex;gap:8px;margin-top:10px;align-items:center}
+    input[type=text]{flex:1;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff}
+    textarea{flex:1;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff;resize:vertical}
+    button{padding:10px 12px;border:none;border-radius:8px;background:orange;color:#000;font-weight:bold;cursor:pointer}
+    .small{font-size:13px;color:#ddd}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
+    .hidden{display:none}
+    .muted{color:#bbb;font-size:13px}
+    .danger{background:#ff6b6b;color:#000}
+    .inline-btn{background:transparent;border:none;color:#ff9f1c;cursor:pointer}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div style="font-weight:bold">المحادثات والمنشورات | منصة E</div>
+      <div class="small">منشورات المستخدمين تظهر أعلاه؛ اكتب منشورك ثم اضغط نشر</div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div id="user-email" class="small muted"></div>
+      <img src="logo.jpg" alt="logo">
+      <button id="signout" class="ghost">خروج</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- لوحة المنشورات (يعرض منشورات الجميع) -->
+    <div class="panel">
+      <h3 style="margin:0 0 8px 0">منشورات المستخدمين</h3>
+      <div id="posts" class="posts">جارٍ التحميل...</div>
+
+      <!-- composer للمنشور الجديد -->
+      <div style="margin-top:8px">
+        <textarea id="postInput" rows="3" placeholder="اكتب منشوراً جديداً..." ></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <button id="publishBtn" class="hidden">نشر</button>
+          <div id="publishHint" class="muted">لن يظهر زر النشر إلا بعد كتابة نص</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- لوحة الدردشة -->
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-weight:bold">المحادثات | Chat</div>
+          <div class="small">دردشة حية متصلة بـ Firestore</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <input id="chatUser" type="text" placeholder="اسم عرضي (مثلاً: Farouk)" value="" style="padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);width:100%">
+      </div>
+
+      <div id="window" class="chat-window"></div>
+
+      <div class="composer" style="margin-top:8px">
+        <input id="chatInput" type="text" placeholder="اكتب رسالتك هنا...">
+        <button id="sendBtn">إرسال</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlH5QLPBbqMqr4WOhQY7XtSH-3KIzV8-o",
+      authDomain: "e-platform-20de2.firebaseapp.com",
+      projectId: "e-platform-20de2",
+      storageBucket: "e-platform-20de2.firebasestorage.app",
+      messagingSenderId: "852282304347",
+      appId: "1:852282304347:web:8a90926fbf8eeef1551c7e",
+      measurementId: "G-MGH8K3W6HG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // عناصر DOM
+    const postsEl = document.getElementById('posts');
+    const postInput = document.getElementById('postInput');
+    const publishBtn = document.getElementById('publishBtn');
+    const publishHint = document.getElementById('publishHint');
+
+    const windowEl = document.getElementById('window');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatUser = document.getElementById('chatUser');
+
+    const userEmailEl = document.getElementById('user-email');
+    const signoutBtn = document.getElementById('signout');
+
+    let currentUser = null;
+
+    // التحقق من المصادقة: إذا لم يكن مسجلاً يتم تحويله إلى login.html
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = user;
+      userEmailEl.textContent = user.email || user.phoneNumber || 'مستخدم';
+      // تحميل واستقبال المنشورات والدردشة بعد التأكد
+      initPosts();
+      initChat();
+    });
+
+    // --- منشورات (collection: posts) ---
+    let unsubscribePosts = null;
+    function initPosts(){
+      if (unsubscribePosts) unsubscribePosts();
+      postsEl.innerHTML = 'جارٍ التحميل...';
+      const q = query(collection(db, 'posts'), orderBy('createdAt','desc'));
+      unsubscribePosts = onSnapshot(q, snap => {
+        postsEl.innerHTML = '';
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const id = docSnap.id;
+          const div = document.createElement('div');
+          div.className = 'post';
+          const owner = data.userEmail || data.username || 'مستخدم';
+          const time = data.createdAt ? new Date(data.createdAt.seconds*1000).toLocaleString() : 'الآن';
+          div.innerHTML = `<div class="meta"><div><strong>${escapeHtml(owner)}</strong></div><div class="muted">${escapeHtml(time)}</div></div>
+                           <div class="text">${escapeHtml(data.text)}</div>`;
+          // زر حذف إذا كان هذا المنشور من نفس المستخدم
+          if (currentUser && (data.userId === currentUser.uid)) {
+            const del = document.createElement('button');
+            del.className = 'inline-btn';
+            del.textContent = 'حذف';
+            del.onclick = async () => {
+              if (!confirm('هل تريد حذف هذا المنشور؟')) return;
+              await deleteDoc(doc(db, 'posts', id));
+            };
+            div.querySelector('.meta').appendChild(del);
+          }
+          postsEl.appendChild(div);
+        });
+        if (!snap.empty) {
+          const info = document.createElement('div');
+          info.className = 'muted';
+          info.style.marginTop = '6px';
+          info.textContent = 'المنشورات الأحدث في الأعلى';
+          postsEl.appendChild(info);
+        } else {
+          postsEl.innerHTML = '<div class="muted">لا توجد منشورات بعد، كن أول من ينشر!</div>';
+        }
+      });
+    }
+
+    // تفعيل زر "نشر" فقط بعد الكتابة
+    postInput.addEventListener('input', () => {
+      const v = postInput.value.trim();
+      if (v.length) {
+        publishBtn.classList.remove('hidden');
+        publishHint.classList.add('hidden');
+      } else {
+        publishBtn.classList.add('hidden');
+        publishHint.classList.remove('hidden');
+      }
+    });
+
+    publishBtn.addEventListener('click', async () => {
+      const text = postInput.value.trim();
+      if (!text) return;
+      publishBtn.disabled = true;
+      try {
+        await addDoc(collection(db, 'posts'), {
+          userId: currentUser.uid,
+          userEmail: currentUser.email || '',
+          text,
+          createdAt: serverTimestamp()
+        });
+        postInput.value = '';
+        publishBtn.classList.add('hidden');
+        publishHint.classList.remove('hidden');
+      } catch(e) {
+        alert('حدث خطأ عند النشر: ' + e.message);
+      } finally {
+        publishBtn.disabled = false;
+      }
+    });
+
+    // --- دردشة بسيطة باستخدام collection: messages ---
+    let unsubscribeChat = null;
+    function initChat(){
+      if (unsubscribeChat) unsubscribeChat();
+      windowEl.innerHTML = 'جارٍ التحميل...';
+      const q = query(collection(db, 'messages'), orderBy('createdAt','asc'));
+      unsubscribeChat = onSnapshot(q, snap => {
+        windowEl.innerHTML = '';
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const div = document.createElement('div');
+          const userName = d.username || d.userEmail || 'مستخدم';
+          const cls = (d.userId === currentUser.uid) ? 'msg me' : 'msg other';
+          div.className = cls;
+          const time = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleTimeString() : '';
+          div.innerHTML = `<div style="font-size:13px;color:#ddd"><strong>${escapeHtml(userName)}</strong> <span style="font-size:11px;color:#bbb"> ${escapeHtml(time)}</span></div>
+                           <div style="margin-top:6px">${escapeHtml(d.text)}</div>`;
+          windowEl.appendChild(div);
+        });
+        windowEl.scrollTop = windowEl.scrollHeight;
+      });
+    }
+
+    // إرسال رسالة
+    sendBtn.addEventListener('click', async () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      sendBtn.disabled = true;
+      try {
+        await addDoc(collection(db, 'messages'), {
+          userId: currentUser.uid,
+          username: chatUser.value.trim() || currentUser.email || 'مستخدم',
+          text,
+          createdAt: serverTimestamp()
+        });
+        chatInput.value = '';
+      } catch(e) {
+        alert('خطأ في الإرسال: ' + e.message);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
+
+    // تسجيل الخروج
+    signoutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    });
+
+    // أدوات مساعدة
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+    // تنظيف عند الخروج من الصفحة
+    window.addEventListener('beforeunload', () => {
+      if (unsubscribePosts) unsubscribePosts();
+      if (unsubscribeChat) unsubscribeChat();
+    });
+  </script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>

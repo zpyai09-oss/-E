@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>الملف الشخصي | Profile - منصة E</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Segoe UI,Helvetica,sans-serif;direction:rtl;background:url('background.jpg') center/cover no-repeat;color:#fff}
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(0,0,0,0.55)}
+    header img{width:44px;border-radius:6px}
+    .container{max-width:800px;margin:20px auto;padding:18px;background:rgba(0,0,0,0.45);border-radius:12px}
+    .profile-top{display:flex;gap:16px;align-items:center}
+    .photo{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.07);background:#222}
+    .info{flex:1}
+    .info h2{margin:0;color:lightgreen}
+    .info p{margin:6px 0;color:#ddd}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .btn{padding:10px 12px;border-radius:8px;background:orange;color:#000;border:none;cursor:pointer;font-weight:bold}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
+    textarea{width:100%;min-height:120px;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.03);color:#fff;resize:vertical}
+    input[type=file]{display:none}
+    .muted{color:#bbb;font-size:13px}
+    .small{font-size:13px;color:#ddd}
+    .msg{margin-top:10px;color:lightgreen}
+    .error{color:#ff8a80}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="logo.jpg" alt="logo">
+      <div>
+        <div style="font-weight:bold">منصة E</div>
+        <div class="small">ملفك الشخصي</div>
+      </div>
+    </div>
+    <div>
+      <button id="homeBtn" class="ghost btn">العودة للرئيسية</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="profile-top">
+      <img id="profilePhoto" class="photo" src="default-user.png" alt="صورة الملف">
+      <div class="info">
+        <h2 id="displayName">جارٍ التحميل...</h2>
+        <p id="email" class="muted"></p>
+
+        <div class="actions">
+          <label for="photoInput" class="btn ghost" style="display:inline-block;cursor:pointer">تغيير الصورة</label>
+          <input type="file" id="photoInput" accept="image/*">
+          <button id="savePhoto" class="btn" style="display:none">رفع الصورة</button>
+          <button id="removePhoto" class="btn ghost" style="display:none">إزالة الصورة</button>
+        </div>
+
+        <div id="photoPreviewMsg" class="small muted" style="margin-top:6px">يمكنك اختيار صورة جديدة ثم الضغط على رفع.</div>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:16px 0">
+
+    <div>
+      <label class="small">السيرة الذاتية</label>
+      <textarea id="bio" placeholder="اكتب سيرتك الذاتية هنا..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button id="saveProfile" class="btn">حفظ السيرة</button>
+        <button id="cancelBtn" class="btn ghost">إلغاء</button>
+        <div id="status" class="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlH5QLPBbqMqr4WOhQY7XtSH-3KIzV8-o",
+      authDomain: "e-platform-20de2.firebaseapp.com",
+      projectId: "e-platform-20de2",
+      storageBucket: "e-platform-20de2.firebasestorage.app",
+      messagingSenderId: "852282304347",
+      appId: "1:852282304347:web:8a90926fbf8eeef1551c7e",
+      measurementId: "G-MGH8K3W6HG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // عناصر DOM
+    const profilePhoto = document.getElementById('profilePhoto');
+    const displayNameEl = document.getElementById('displayName');
+    const emailEl = document.getElementById('email');
+    const photoInput = document.getElementById('photoInput');
+    const savePhotoBtn = document.getElementById('savePhoto');
+    const removePhotoBtn = document.getElementById('removePhoto');
+    const bioEl = document.getElementById('bio');
+    const saveProfileBtn = document.getElementById('saveProfile');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const statusEl = document.getElementById('status');
+    const homeBtn = document.getElementById('homeBtn');
+    const DEFAULT_PHOTO = 'default-user.png';
+
+    let currentUser = null;
+    let currentUserDocRef = null;
+    let selectedFile = null;
+    let currentPhotoPath = null;
+
+    homeBtn.addEventListener('click', ()=> window.location.href = 'home.html');
+
+    // مراقبة حالة المصادقة
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = user;
+      currentUserDocRef = doc(db, 'users', user.uid);
+      emailEl.textContent = user.email || user.phoneNumber || '';
+      displayNameEl.textContent = user.displayName || user.email || 'مستخدم';
+
+      // جلب بيانات المستخدم من Firestore
+      try {
+        const snap = await getDoc(currentUserDocRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          bioEl.value = data.bio || '';
+          displayNameEl.textContent = data.displayName || (user.displayName || user.email || 'مستخدم');
+          currentPhotoPath = data.photoPath || data.photoURL || null;
+          if (data.photoPath) {
+            // صورة مخزنة في Storage
+            try {
+              const url = await getDownloadURL(sRef(storage, data.photoPath));
+              profilePhoto.src = url;
+              removePhotoBtn.style.display = 'inline-block';
+            } catch {
+              profilePhoto.src = data.photoURL || user.photoURL || DEFAULT_PHOTO;
+            }
+          } else {
+            profilePhoto.src = data.photoURL || user.photoURL || DEFAULT_PHOTO;
+            if (data.photoURL || user.photoURL) removePhotoBtn.style.display = 'inline-block';
+            else removePhotoBtn.style.display = 'none';
+          }
+        } else {
+          // انشاء مستند افتراضي
+          await setDoc(currentUserDocRef, {
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            photoPath: '',
+            bio: ''
+          });
+          profilePhoto.src = user.photoURL || DEFAULT_PHOTO;
+          removePhotoBtn.style.display = user.photoURL ? 'inline-block' : 'none';
+        }
+      } catch (e) {
+        console.error('خطأ في جلب الملف الشخصي:', e);
+        statusEl.textContent = 'حدث خطأ أثناء تحميل الملف.';
+        statusEl.classList.add('error');
+      }
+    });
+
+    // اختيار ملف الصورة - معاينة
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        statusEl.textContent = 'الملف المختار ليس صورة.';
+        statusEl.classList.add('error');
+        return;
+      }
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = e => {
+        profilePhoto.src = e.target.result;
+        savePhotoBtn.style.display = 'inline-block';
+        statusEl.textContent = 'معاينة الصورة جاهزة للرفع.';
+        statusEl.classList.remove('error');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // رفع الصورة إلى Storage وتحديث مستند المستخدم
+    savePhotoBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      savePhotoBtn.disabled = true;
+      statusEl.textContent = 'جارٍ رفع الصورة...';
+      try {
+        const path = user_photos/${currentUser.uid}/${Date.now()}_${selectedFile.name};
+        const storageRef = sRef(storage, path);
+        await uploadBytes(storageRef, selectedFile);
+        const url = await getDownloadURL(storageRef);
+
+        // تحديث مستند المستخدم
+        await updateDoc(currentUserDocRef, {
+          photoURL: url,
+          photoPath: path
+        });
+
+        statusEl.textContent = '✅ تم رفع الصورة وتحديث الملف.';
+        statusEl.classList.remove('error');
+        selectedFile = null;
+        savePhotoBtn.style.display = 'none';
+        removePhotoBtn.style.display = 'inline-block';
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '❌ فشل رفع الصورة: ' + e.message;
+        statusEl.classList.add('error');
+      } finally {
+        savePhotoBtn.disabled = false;
+      }
+    });
+
+    // إزالة الصورة (مسح المسار من مستند المستخدم وحذف الملف من Storage إن وُجد)
+    removePhotoBtn.addEventListener('click', async () => {
+      if (!confirm('هل تريد إزالة الصورة الشخصية؟')) return;
+      statusEl.textContent = 'جارٍ إزالة الصورة...';
+      try {
+        // حذف من التخزين إن كان هناك مسار
+        if (currentPhotoPath) {
+          try { await deleteObject(sRef(storage, currentPhotoPath)); } catch {}
+        }
+        // تحديث المستند إلى الوضع الافتراضي
+        await updateDoc(currentUserDocRef, { photoURL: '', photoPath: '' });
+        profilePhoto.src = DEFAULT_PHOTO;
+        removePhotoBtn.style.display = 'none';
+        statusEl.textContent = '✅ تمت إزالة الصورة.';
+        statusEl.classList.remove('error');
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '❌ خطأ عند إزالة الصورة: ' + e.message;
+        statusEl.classList.add('error');
+      }
+    });
+
+    // حفظ السيرة الذاتية وتحديث displayName إن أردت
+    saveProfileBtn.addEventListener('click', async () => {
+      const bio = bioEl.value.trim();
+      statusEl.textContent = 'جارٍ حفظ السيرة...';
+      try {
+        await updateDoc(currentUserDocRef, { bio });
+        statusEl.textContent = '✅ تم حفظ السيرة بنجاح.';
+        statusEl.classList.remove('error');
+      } catch (e) {
+        console.error(e);
+        // إذا لم يكن المستند موجود بعد، نستخدم setDoc
+        try {
+          await setDoc(currentUserDocRef, { bio }, { merge: true });
+          statusEl.textContent = '✅ تم إنشاء وحفظ السيرة.';
+          statusEl.classList.remove('error');
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = '❌ فشل حفظ السيرة: ' + err.message;
+          statusEl.classList.add('error');
+        }
+      }
+    });
+
+    cancelBtn.addEventListener('click', async () => {
+      // إعادة تحميل البيانات من Firestore لإلغاء التغييرات غير المحفوظة
+      statusEl.textContent = '';
+      try {
+        const snap = await getDoc(currentUserDocRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          bioEl.value = data.bio || '';
+          if (data.photoPath) {
+            const url = await getDownloadURL(sRef(storage, data.photoPath));
+            profilePhoto.src = url;
+          } else {
+            profilePhoto.src = data.photoURL || DEFAULT_PHOTO;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+  </script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>

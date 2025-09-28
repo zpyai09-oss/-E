@@ -1,0 +1,45 @@
+/* الأساسيات العامة لكل الشاشات */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: url('background.jpg') center/cover no-repeat;
+  color: white;
+}
+
+/* تنسيق للهواتف الصغيرة */
+@media (max-width: 600px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hero {
+    padding: 12px;
+    margin: 10px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .user-photo {
+    width: 80px;
+    height: 80px;
+  }
+}
